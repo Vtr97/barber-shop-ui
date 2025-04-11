@@ -40,7 +40,7 @@ export class ListClientsComponent implements OnInit, OnDestroy {
   }
 
   update(client: ClientModelTable) {
-    this.router.navigate(["client/edit-client", client.id]);
+    this.router.navigate(["clients/edit-client", client.id]);
   }
 
   delete(client: ClientModelTable) {

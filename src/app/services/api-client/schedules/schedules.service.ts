@@ -29,7 +29,7 @@ export class SchedulesService implements IScheduleService {
     month: number
   ): Observable<ScheduleAppointmentMonthResponse> {
     return this.http.get<ScheduleAppointmentMonthResponse>(
-      `${this.basePath}schedule/${year}/${month}`
+      `${this.basePath}schedules/${year}/${month}`
     );
   }
 }
