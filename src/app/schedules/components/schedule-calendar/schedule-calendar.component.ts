@@ -36,6 +36,7 @@ import { MatPaginator, MatPaginatorModule } from "@angular/material/paginator";
 import { MatTimepickerModule } from "@angular/material/timepicker";
 import { YesNoDialogComponent } from "../../../commons/components/yes-no-dialog/yes-no-dialog.component";
 import { Subscription } from "rxjs";
+import { provideNativeDateAdapter } from "@angular/material/core";
 
 @Component({
   selector: "app-schedule-calendar",
@@ -57,6 +58,7 @@ import { Subscription } from "rxjs";
   templateUrl: "./schedule-calendar.component.html",
   styleUrl: "./schedule-calendar.component.scss",
   providers: [
+    provideNativeDateAdapter(),
     { provide: SERVICES_TOKEN.DIALOG, useClass: DialogManagerService },
   ],
 })
@@ -97,7 +99,7 @@ export class ScheduleCalendarComponent
     return this._selected;
   }
 
-  set select(selected: Date) {
+  set selected(selected: Date) {
     if (this._selected.getTime() !== selected.getTime()) {
       this.onDateChange.emit(selected);
       this.buildTable();
@@ -142,6 +144,7 @@ export class ScheduleCalendarComponent
       clientName: this.clients.find((c) => c.id === this.newSchedule.clientId!)!
         .name,
     };
+    this.monthSchedule.scheduledAppointments.push(saved);
     this.onScheduleClient.emit(saved);
     this.buildTable();
     form.resetForm();
@@ -180,10 +183,10 @@ export class ScheduleCalendarComponent
   }
 
   private buildTable() {
-    const appointments = this.monthSchedule.scheduleAppointments.filter(
+    const appointments = this.monthSchedule.scheduledAppointments.filter(
       (a) =>
         this.monthSchedule.year === this._selected.getFullYear() &&
-        this.monthSchedule.month === this._selected.getMonth() &&
+        this.monthSchedule.month - 1 === this._selected.getMonth() &&
         a.day === this._selected.getDate()
     );
     this.dataSource = new MatTableDataSource<ClientScheduleAppointmentModel>(

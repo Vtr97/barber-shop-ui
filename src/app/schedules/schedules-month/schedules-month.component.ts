@@ -8,10 +8,13 @@ import { ISnackBarManagerService } from "../../services/isnackbar-manager.servic
 import { SchedulesService } from "../../services/api-client/schedules/schedules.service";
 import { ClientsService } from "../../services/api-client/clients/clients.service";
 import {
+  ClientScheduleAppointmentModel,
+  SaveScheduleModel,
   ScheduleAppointmentMonthModel,
   SelectedClientModel,
 } from "../schedule.models";
 import { Subscription } from "rxjs";
+import { SaveScheduleRequest } from "../../services/api-client/schedules/schedule.models";
 
 @Component({
   selector: "app-schedules-month",
@@ -25,6 +28,7 @@ import { Subscription } from "rxjs";
   ],
 })
 export class SchedulesMonthComponent implements OnInit, OnDestroy {
+  private selectedDate?: Date;
   private subscriptions: Subscription[] = [];
   monthSchedule!: ScheduleAppointmentMonthModel;
   clients: SelectedClientModel[] = [];
@@ -38,7 +42,46 @@ export class SchedulesMonthComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    const currentDate = new Date();
+    this.fetchSchedules(new Date());
+    this.subscriptions.push(
+      this.clientHttpsService.list().subscribe((data) => {
+        this.clients = data;
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((s) => s.unsubscribe());
+  }
+
+  onDateChange(date: Date) {
+    this.selectedDate = date;
+    this.fetchSchedules(date);
+  }
+
+  onConfirmDelete(schedule: ClientScheduleAppointmentModel) {
+    this.subscriptions.push(this.httpservice.delete(schedule.id).subscribe());
+  }
+
+  onScheduleCLient(schedule: SaveScheduleModel) {
+    if (schedule.startAt && schedule.endAt && schedule.clientId) {
+      const request: SaveScheduleRequest = {
+        startAt: schedule.startAt,
+        endAt: schedule.endAt,
+        clientId: schedule.clientId,
+      };
+      this.subscriptions.push(
+        this.httpservice.save(request).subscribe(() => {
+          this.snackbarManager.show("Agendamento realizado com sucesso!");
+          if (this.selectedDate) {
+            this.fetchSchedules(this.selectedDate);
+          }
+        })
+      );
+    }
+  }
+
+  private fetchSchedules(currentDate: Date) {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth() + 1;
     this.subscriptions.push(
@@ -46,8 +89,5 @@ export class SchedulesMonthComponent implements OnInit, OnDestroy {
         this.monthSchedule = data;
       })
     );
-  }
-  ngOnDestroy(): void {
-    this.subscriptions.forEach((s) => s.unsubscribe());
   }
 }
